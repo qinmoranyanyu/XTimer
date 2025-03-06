@@ -31,7 +31,7 @@ public class XTimerServiceImpl implements XTimerService {
     @Autowired
     MigratorManager migratorManager;
 
-    private static final int  defaultGapSeconds= 3;
+    private static final int defaultGapSeconds = 3;
 
     @Override
     public Long CreateTimer(TimerDTO timerDTO) {
@@ -46,12 +46,12 @@ public class XTimerServiceImpl implements XTimerService {
 //        }
 
         boolean isValidCron = CronExpression.isValidExpression(timerDTO.getCron());
-        if(!isValidCron){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"invalid cron");
+        if (!isValidCron) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "invalid cron");
         }
 
         TimerModel timerModel = TimerModel.voToObj(timerDTO);
-        if (timerModel == null){
+        if (timerModel == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         timerMapper.save(timerModel);
@@ -65,8 +65,8 @@ public class XTimerServiceImpl implements XTimerService {
                 TimerUtils.GetCreateLockKey(app),
                 lockToken,
                 defaultGapSeconds);
-        if(!ok){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"创建/删除操作过于频繁，请稍后再试！");
+        if (!ok) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "创建/删除操作过于频繁，请稍后再试！");
         }
 
         timerMapper.deleteById(id);
@@ -75,7 +75,7 @@ public class XTimerServiceImpl implements XTimerService {
     @Override
     public void Update(TimerDTO timerDTO) {
         TimerModel timerModel = TimerModel.voToObj(timerDTO);
-        if (timerModel == null){
+        if (timerModel == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         timerMapper.update(timerModel);
@@ -83,7 +83,7 @@ public class XTimerServiceImpl implements XTimerService {
 
     @Override
     public TimerDTO GetTimer(String app, long id) {
-        TimerModel timerModel  = timerMapper.getTimerById(id);
+        TimerModel timerModel = timerMapper.getTimerById(id);
         TimerDTO timerDTO = TimerModel.objToVo(timerModel);
         return timerDTO;
     }
@@ -95,8 +95,8 @@ public class XTimerServiceImpl implements XTimerService {
                 TimerUtils.GetEnableLockKey(app),
                 lockToken,
                 defaultGapSeconds);
-        if(!ok){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"激活/去激活操作过于频繁，请稍后再试！");
+        if (!ok) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "激活/去激活操作过于频繁，请稍后再试！");
         }
 
         // 激活逻辑
@@ -104,15 +104,15 @@ public class XTimerServiceImpl implements XTimerService {
     }
 
     @Transactional
-    public void doEnableTimer(long id){
+    public void doEnableTimer(long id) {
         // 1. 数据库获取Timer
         TimerModel timerModel = timerMapper.getTimerById(id);
-        if(timerModel == null){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"激活失败，timer不存在：timerId"+id);
+        if (timerModel == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "激活失败，timer不存在：timerId" + id);
         }
         // 2. 校验状态
-        if(timerModel.getStatus() == TimerStatus.Enable.getStatus()){
-            log.warn("Timer非Unable状态，激活失败，timerId:"+timerModel.getTimerId());
+        if (timerModel.getStatus() == TimerStatus.Enable.getStatus()) {
+            log.warn("Timer非Unable状态，激活失败，timerId:" + timerModel.getTimerId());
         }
         // 修改 timer 状态为激活态
         timerModel.setStatus(TimerStatus.Enable.getStatus());
@@ -130,8 +130,8 @@ public class XTimerServiceImpl implements XTimerService {
                 TimerUtils.GetEnableLockKey(app),
                 lockToken,
                 defaultGapSeconds);
-        if(!ok){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"激活/去激活操作过于频繁，请稍后再试！");
+        if (!ok) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "激活/去激活操作过于频繁，请稍后再试！");
         }
 
         // 去激活逻辑
@@ -139,12 +139,12 @@ public class XTimerServiceImpl implements XTimerService {
     }
 
     @Transactional
-    public void doUnEnableTimer(Long id){
+    public void doUnEnableTimer(Long id) {
         // 1. 数据库获取Timer
         TimerModel timerModel = timerMapper.getTimerById(id);
         // 2. 校验状态
-        if(timerModel.getStatus() != TimerStatus.Enable.getStatus()){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"Timer非Enable状态，去激活失败，id:"+id);
+        if (timerModel.getStatus() != TimerStatus.Enable.getStatus()) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "Timer非Enable状态，去激活失败，id:" + id);
         }
         timerModel.setStatus(TimerStatus.Unable.getStatus());
         timerMapper.update(timerModel);

@@ -15,27 +15,27 @@ public class ReentrantDistributeLock {
     @Autowired
     private RedisBase redisBase;
 
-    public boolean lock(String key, String token, long expireSeconds){
+    public boolean lock(String key, String token, long expireSeconds) {
         // 首先查询锁是否属于自己
         Object res = redisBase.get(key);
-        if(res != null && StringUtils.equals(res.toString(),token)){
+        if (res != null && StringUtils.equals(res.toString(), token)) {
             return true;
         }
 
         // 不属于自己，尝试获取锁
-        boolean ok = redisBase.setnx(key,token,expireSeconds);
-        if(!ok){
+        boolean ok = redisBase.setnx(key, token, expireSeconds);
+        if (!ok) {
             log.info("lock is acquired by others");
         }
         return ok;
     }
 
-    public void unlock(String key,String token){
+    public void unlock(String key, String token) {
         Long execute = redisBase.executeLua(getUnlockScript(), Arrays.asList(key), token, null);
         if (execute.longValue() == 0) {
             log.info("释放锁{}失败:{}", key, execute);
         } else if (execute.longValue() == 1) {
-            log.info("释放锁{}成功:{}", key,execute);
+            log.info("释放锁{}成功:{}", key, execute);
         }
     }
 
@@ -52,12 +52,12 @@ public class ReentrantDistributeLock {
         return defaultRedisScript;
     }
 
-    public void expireLock(String key, String token, long expireSeconds){
+    public void expireLock(String key, String token, long expireSeconds) {
         Long execute = redisBase.executeLua(getExpireLockScript(), Arrays.asList(key), token, expireSeconds);
         if (execute.longValue() == 0) {
             log.info("延期{}失败:{}", key, execute);
         } else if (execute.longValue() == 1) {
-            log.info("延期{}成功:{}", key,execute);
+            log.info("延期{}成功:{}", key, execute);
         }
     }
 
